@@ -37,6 +37,37 @@ const searchFlights = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ flights });
 });
 
+const searchFlightsPositions = catchAsync(async (req, res) => {
+  const { lat1, lon1, lat2, lon2 } = req.query;
+
+  const now = new Date();
+  const timestamp = now.getTime();
+
+  const fifteenMinsAgo = new Date(now.getTime() - 15 * 60 * 1000);
+  const fifteenMinsAgoTimestamp = fifteenMinsAgo.getTime();
+
+  const initialUrl = `${AERO_API_URL}/flights/search/positions?query={range%20lat%20${lat1}%20${lat2}%20range%20lon%20${lon1}%20${lon2}}%20{>=%20clock%20${fifteenMinsAgoTimestamp}}%20{<=%20clock%20${timestamp}}`;
+
+  const headers = {
+    Accept: 'application/json; charset=UTF-8',
+    'x-apikey': config.aero_api_key,
+  };
+
+  let allFlights = [];
+  let nextUrl = initialUrl;
+
+  while (nextUrl) {
+    // eslint-disable-next-line no-await-in-loop
+    const response = await axios.get(nextUrl, { headers });
+    const { flights, links } = response.data;
+
+    allFlights = allFlights.concat(flights);
+    nextUrl = links && links.next ? `${AERO_API_URL}${links.next}` : null;
+  }
+
+  res.status(httpStatus.OK).send({ flights: allFlights });
+});
+
 const getFlightTrack = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -59,4 +90,5 @@ const getFlightTrack = catchAsync(async (req, res) => {
 module.exports = {
   searchFlights,
   getFlightTrack,
+  searchFlightsPositions,
 };
