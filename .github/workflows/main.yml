@@ -29,4 +29,4 @@ jobs:
             git reset --hard
             git pull origin main
             npm install
-            pm2 restart plane-map-api
+            pm2 restart PlaneMap-API
