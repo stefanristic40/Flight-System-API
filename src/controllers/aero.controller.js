@@ -48,11 +48,11 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const timesteampGapMinutes = 15;
   const allFlights = [];
 
-  for (let i = 0; i < (0.4 * 60) / timesteampGapMinutes; i += 1) {
+  for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
     const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
 
-    const url = `${AERO_API_URL}/flights/search/positions?query={range%20lat%20${lat1}%20${lat2}%20range%20lon%20${lon1}%20${lon2}}%20{>=%20clock%20${Math.floor(
+    const url = `${AERO_API_URL}/flights/search/positions?query={range%20lat%20${lat1}%20${lat2}}%20{range%20lon%20${lon1}%20${lon2}}%20{>=%20clock%20${Math.floor(
       startTimeStamp / 1000
     )}}%20{<=%20clock%20${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
