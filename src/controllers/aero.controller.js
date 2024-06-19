@@ -48,7 +48,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const timesteampGapMinutes = 15;
   const allFlights = [];
 
-  for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
+  for (let i = 0; i < (1 * 60) / timesteampGapMinutes; i += 1) {
     const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
 
