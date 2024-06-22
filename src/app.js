@@ -50,6 +50,12 @@ if (config.env === 'production') {
   app.use('/v1/auth', authLimiter);
 }
 
+// Point frontend "/client" when route is "/"
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "script-src 'self' https://maps.googleapis.com;");
+  next();
+});
+app.use('/', express.static('client/build'));
 // v1 api routes
 app.use('/api/v1', routes);
 
