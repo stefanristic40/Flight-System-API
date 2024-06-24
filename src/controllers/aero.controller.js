@@ -52,9 +52,9 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
     const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
 
-    const url = `${AERO_API_URL}/flights/search/positions?query={range%20lat%20${lat1 < lat2 ? lat1 : lat2}%20${
-      lat1 < lat2 ? lat2 : lat1
-    }}%20{range%20lon%20${lon1 < lon2 ? lon1 : lon2}%20${lon1 < lon2 ? lon2 : lon1}}%20{>=%20clock%20${Math.floor(
+    const url = `${AERO_API_URL}/flights/search/positions?query={>= lat ${lat1 < lat2 ? lat1 : lat2}} {>= lon ${
+      lon1 < lon2 ? lon1 : lon2
+    }} {<= lat ${lat1 < lat2 ? lat2 : lat1}} {<= lon ${lon1 < lon2 ? lon2 : lon1}}%20{>=%20clock%20${Math.floor(
       startTimeStamp / 1000
     )}}%20{<=%20clock%20${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
