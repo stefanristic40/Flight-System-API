@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const httpStatus = require('http-status');
 const { default: axios } = require('axios');
 
@@ -48,13 +49,21 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const timesteampGapMinutes = 15;
   const allFlights = [];
 
+  const startLon = parseFloat(lon1) < parseFloat(lon2) ? parseFloat(lon1) : parseFloat(lon2);
+  const endLon = parseFloat(lon1) < parseFloat(lon2) ? parseFloat(lon2) : parseFloat(lon1);
+  const startLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat1) : parseFloat(lat2);
+  const endLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat2) : parseFloat(lat1);
+
+  console.log('startLon', startLon);
+  console.log('endLon', endLon);
+  console.log('startLat', startLat);
+  console.log('endLat', endLat);
+
   for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
     const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
 
-    const url = `${AERO_API_URL}/flights/search/positions?query={>= lat ${lat1 < lat2 ? lat1 : lat2}} {>= lon ${
-      lon1 < lon2 ? lon1 : lon2
-    }} {<= lat ${lat1 < lat2 ? lat2 : lat1}} {<= lon ${lon1 < lon2 ? lon2 : lon1}}%20{>=%20clock%20${Math.floor(
+    const url = `${AERO_API_URL}/flights/search/positions?query={>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}}%20{>=%20clock%20${Math.floor(
       startTimeStamp / 1000
     )}}%20{<=%20clock%20${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
