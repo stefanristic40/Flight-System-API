@@ -60,17 +60,33 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   console.log('endLat', endLat);
 
   for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
-    const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
-    const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
+    // const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
+    // const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
+
+    // Start from 24 hours ago
+    const startTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + i * timesteampGapMinutes * 60 * 1000;
+    const endTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + (i + 1) * timesteampGapMinutes * 60 * 1000;
 
     const url = `${AERO_API_URL}/flights/search/positions?query={>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}}%20{>=%20clock%20${Math.floor(
       startTimeStamp / 1000
     )}}%20{<=%20clock%20${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
     // eslint-disable-next-line no-console
-    console.log('url', url);
+    console.log(i, 'url', url);
 
     let nextUrl = url;
+
+    const status = {
+      index: i + 1,
+      start_date: new Date(startTimeStamp).toISOString(),
+      end_date: new Date(endTimeStamp).toISOString(),
+    };
+
+    let sData = {
+      status,
+    };
+
+    res.write(`${JSON.stringify(sData)}hhh`);
 
     while (nextUrl) {
       // eslint-disable-next-line no-await-in-loop
@@ -99,7 +115,12 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
               ...flightTrackResponse.data,
             };
 
-            res.write(`${JSON.stringify(flightData)}hhh`);
+            sData = {
+              flightData,
+              status,
+            };
+
+            res.write(`${JSON.stringify(sData)}hhh`);
 
             // eslint-disable-next-line no-console
             console.log('flightData', position.fa_flight_id);
