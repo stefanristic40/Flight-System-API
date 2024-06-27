@@ -59,7 +59,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
     const startTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + i * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + (i + 1) * timesteampGapMinutes * 60 * 1000;
 
-    const minHeightQuery = minHeight ? `{>= alt ${minHeight}} ` : '';
+    const minHeightQuery = minHeight ? `{<= alt ${minHeight}} ` : '';
 
     const url = `${AERO_API_URL}/flights/search/positions?query=${minHeightQuery}{>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}} {>= clock ${Math.floor(
       startTimeStamp / 1000
