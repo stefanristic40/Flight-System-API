@@ -37,7 +37,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
 
-  const { lat1, lon1, lat2, lon2 } = req.query;
+  const { lat1, lon1, lat2, lon2, minHeight } = req.query;
 
   const now = new Date();
 
@@ -54,22 +54,16 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const startLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat1) : parseFloat(lat2);
   const endLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat2) : parseFloat(lat1);
 
-  console.log('startLon', startLon);
-  console.log('endLon', endLon);
-  console.log('startLat', startLat);
-  console.log('endLat', endLat);
-
   for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
-    // const startTimeStamp = now.getTime() - (i + 1) * timesteampGapMinutes * 60 * 1000;
-    // const endTimeStamp = now.getTime() - i * timesteampGapMinutes * 60 * 1000;
-
     // Start from 24 hours ago
     const startTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + i * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + (i + 1) * timesteampGapMinutes * 60 * 1000;
 
-    const url = `${AERO_API_URL}/flights/search/positions?query={>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}}%20{>=%20clock%20${Math.floor(
+    const minHeightQuery = minHeight ? `{>= alt ${minHeight}} ` : '';
+
+    const url = `${AERO_API_URL}/flights/search/positions?query=${minHeightQuery}{>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}} {>= clock ${Math.floor(
       startTimeStamp / 1000
-    )}}%20{<=%20clock%20${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
+    )}} {<= clock ${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
     // eslint-disable-next-line no-console
     console.log(i, 'url', url);
