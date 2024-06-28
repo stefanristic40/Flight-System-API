@@ -37,16 +37,24 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
 
-  const { lat1, lon1, lat2, lon2, maxHeight } = req.query;
+  const { lat1, lon1, lat2, lon2, maxHeight, start, end } = req.query;
 
   const now = new Date();
+  const endDate = end ? new Date(end) : now;
+  const startDate = start ? new Date(start) : new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  console.log('now', now);
+  console.log('startDate', startDate);
+  console.log('endDate', endDate);
+
+  const timesteampGapMinutes = 15;
+  const searchCount = (endDate.getTime() - startDate.getTime()) / (timesteampGapMinutes * 60 * 1000);
+  console.log('searchCount', searchCount);
 
   const headers = {
     Accept: 'application/json; charset=UTF-8',
     'x-apikey': config.aero_api_key,
   };
 
-  const timesteampGapMinutes = 15;
   const allFlights = [];
 
   const startLon = parseFloat(lon1) < parseFloat(lon2) ? parseFloat(lon1) : parseFloat(lon2);
@@ -54,10 +62,13 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const startLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat1) : parseFloat(lat2);
   const endLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat2) : parseFloat(lat1);
 
-  for (let i = 0; i < (24 * 60) / timesteampGapMinutes; i += 1) {
+  for (let i = 0; i < searchCount; i += 1) {
     // Start from 24 hours ago
-    const startTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + i * timesteampGapMinutes * 60 * 1000;
-    const endTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + (i + 1) * timesteampGapMinutes * 60 * 1000;
+    const startTimeStamp = now.getTime() - (searchCount - i) * timesteampGapMinutes * 60 * 1000;
+    const endTimeStamp = now.getTime() - (searchCount - i - 1) * timesteampGapMinutes * 60 * 1000;
+
+    console.log('startTimeStamp', new Date(startTimeStamp));
+    console.log('endTimeStamp', new Date(endTimeStamp));
 
     const maxHeightQuery = maxHeight ? `{<= alt ${maxHeight}} ` : '';
 
@@ -72,6 +83,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
 
     const status = {
       index: i + 1,
+      total: searchCount,
       start_date: new Date(startTimeStamp).toISOString(),
       end_date: new Date(endTimeStamp).toISOString(),
     };
