@@ -37,7 +37,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
 
-  const { lat1, lon1, lat2, lon2, minHeight } = req.query;
+  const { lat1, lon1, lat2, lon2, maxHeight } = req.query;
 
   const now = new Date();
 
@@ -59,9 +59,9 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
     const startTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + i * timesteampGapMinutes * 60 * 1000;
     const endTimeStamp = now.getTime() - 24 * 60 * 60 * 1000 + (i + 1) * timesteampGapMinutes * 60 * 1000;
 
-    const minHeightQuery = minHeight ? `{<= alt ${minHeight}} ` : '';
+    const maxHeightQuery = maxHeight ? `{<= alt ${maxHeight}} ` : '';
 
-    const url = `${AERO_API_URL}/flights/search/positions?query=${minHeightQuery}{>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}} {>= clock ${Math.floor(
+    const url = `${AERO_API_URL}/flights/search/positions?query=${maxHeightQuery}{>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}} {>= clock ${Math.floor(
       startTimeStamp / 1000
     )}} {<= clock ${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
 
