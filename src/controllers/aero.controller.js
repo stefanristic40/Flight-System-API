@@ -33,6 +33,8 @@ const searchFlights = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ flights: allFlights });
 });
 
+const dummyData = Array(2000000).fill('a').join('');
+
 const searchFlightsPositions = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
@@ -90,6 +92,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
 
     let sData = {
       status,
+      dummyData,
     };
 
     res.write(`${JSON.stringify(sData)}hhh`);
@@ -119,6 +122,7 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
             const flightData = {
               ...flightResponse.data,
               ...flightTrackResponse.data,
+              dummyData,
             };
 
             sData = {
