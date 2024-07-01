@@ -35,6 +35,11 @@ const searchFlights = catchAsync(async (req, res) => {
 
 const dummyData = Array(2000000).fill('a').join('');
 
+const headers = {
+  Accept: 'application/json; charset=UTF-8',
+  'x-apikey': config.aero_api_key,
+};
+
 const searchFlightsPositions = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Transfer-Encoding', 'chunked');
@@ -51,11 +56,6 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   const timesteampGapMinutes = 15;
   const searchCount = (endDate.getTime() - startDate.getTime()) / (timesteampGapMinutes * 60 * 1000);
   console.log('searchCount', searchCount);
-
-  const headers = {
-    Accept: 'application/json; charset=UTF-8',
-    'x-apikey': config.aero_api_key,
-  };
 
   const allFlights = [];
 
@@ -147,15 +147,77 @@ const searchFlightsPositions = catchAsync(async (req, res) => {
   // res.status(httpStatus.OK).json({ flights: allFlights });
 });
 
+const searchFlightsPositionsByTimestamps = catchAsync(async (req, res) => {
+  const { lat1, lon1, lat2, lon2, maxHeight, start, end } = req.query;
+
+  const endDate = new Date(end);
+  const startDate = new Date(start);
+
+  const allFlights = [];
+
+  const startLon = parseFloat(lon1) < parseFloat(lon2) ? parseFloat(lon1) : parseFloat(lon2);
+  const endLon = parseFloat(lon1) < parseFloat(lon2) ? parseFloat(lon2) : parseFloat(lon1);
+  const startLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat1) : parseFloat(lat2);
+  const endLat = parseFloat(lat1) < parseFloat(lat2) ? parseFloat(lat2) : parseFloat(lat1);
+
+  const startTimeStamp = startDate.getTime();
+  const endTimeStamp = endDate.getTime();
+
+  const maxHeightQuery = maxHeight ? `{<= alt ${maxHeight}} ` : '';
+
+  const url = `${AERO_API_URL}/flights/search/positions?query=${maxHeightQuery}{>= lat ${startLat}} {>= lon ${startLon}} {<= lat ${endLat}} {<= lon ${endLon}} {>= clock ${Math.floor(
+    startTimeStamp / 1000
+  )}} {<= clock ${Math.floor(endTimeStamp / 1000)}}&unique_flights=true`;
+
+  // eslint-disable-next-line no-console
+  console.log('url', url);
+
+  let nextUrl = url;
+
+  while (nextUrl) {
+    // eslint-disable-next-line no-await-in-loop
+    const response = await axios.get(nextUrl, { headers });
+    const { positions, links } = response.data;
+
+    // eslint-disable-next-line no-console
+    console.log('positions', positions.length);
+
+    if (positions && positions.length > 0) {
+      for (let j = 0; j < positions.length; j += 1) {
+        const position = positions[j];
+        const flight = allFlights.find((f) => f.fa_flight_id === position.fa_flight_id);
+        if (!flight) {
+          // Fetch Flight Position
+          // eslint-disable-next-line no-await-in-loop
+          const flightResponse = await axios.get(`${AERO_API_URL}/flights/${position.fa_flight_id}/position`, { headers });
+          // Fetch Flight track
+          // eslint-disable-next-line no-await-in-loop
+          const flightTrackResponse = await axios.get(`${AERO_API_URL}/flights/${position.fa_flight_id}/track`, {
+            headers,
+          });
+
+          const flightData = {
+            ...flightResponse.data,
+            ...flightTrackResponse.data,
+          };
+
+          // eslint-disable-next-line no-console
+          console.log('flightData', position.fa_flight_id);
+
+          allFlights.push(flightData);
+        }
+      }
+    }
+    nextUrl = links && links.next ? `${AERO_API_URL}${links.next}` : null;
+  }
+
+  res.status(httpStatus.OK).json({ flights: allFlights });
+});
+
 const getFlightTrack = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   try {
-    const headers = {
-      Accept: 'application/json; charset=UTF-8',
-      'x-apikey': config.aero_api_key,
-    };
-
     const response = await axios.get(`${AERO_API_URL}/flights/${id}/track`, { headers });
 
     res.status(httpStatus.OK).send(response.data);
@@ -170,4 +232,5 @@ module.exports = {
   searchFlights,
   getFlightTrack,
   searchFlightsPositions,
+  searchFlightsPositionsByTimestamps,
 };
